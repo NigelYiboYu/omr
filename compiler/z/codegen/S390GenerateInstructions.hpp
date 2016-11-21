@@ -1112,6 +1112,17 @@ TR::Instruction *generateVirtualGuardNOPInstruction(
                    TR::RegisterDependencyConditions *cond,
                    TR::LabelSymbol                      *sym,
                    TR::Instruction                     *preced = 0);
+
+bool
+isCanThrowDecimalOverflowException(TR::InstOpCode::Mnemonic op);
+
+void
+generateS390DAAExceptionRestoreSnippet(TR::CodeGenerator* cg,
+                                       TR::Node* n,
+                                       TR::Instruction* instr,
+                                       TR::InstOpCode::Mnemonic op,
+                                       bool isHasNOP);
+
 #endif
 
 //////////////////////////////////////////////////////////////////////////

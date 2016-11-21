@@ -780,26 +780,7 @@ generateRXInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::N
 #ifdef J9_PROJECT_SPECIFIC
    if (op == TR::InstOpCode::CVB || op == TR::InstOpCode::EX)
       {
-      TR::Node* BCDCHKNode = cg->getCurrentCheckNodeBeingEvaluated();
-
-      if (BCDCHKNode && BCDCHKNode->getOpCodeValue() == TR::BCDCHK)
-         {
-         // Explicitly mark as a DAA intrinsic instruction
-         instr->setThrowsImplicitException();
-
-         //there might be cases that two or more insts generated will throw exception, and we only need one of the label.
-         //so we will assume that at this moment the second child of BCDCHKNode is the label.
-         TR::LabelSymbol * label = (TR::LabelSymbol *)BCDCHKNode->getChild(1);
-
-         TR::S390RestoreGPR7Snippet * restoreSnippet =
-                        new (INSN_HEAP) TR::S390RestoreGPR7Snippet(cg, n,  TR::LabelSymbol::create(INSN_HEAP,cg), label);
-         cg->addSnippet(restoreSnippet);
-         TR::Instruction * nop = new (INSN_HEAP) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, n, cg);
-         TR::Instruction* brcInstr = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, n, restoreSnippet->getSnippetLabel());
-
-         //generate register deps for CVB so that we will not see spills between CVB and the following branch
-         TR::TreeEvaluator::createDAACondDeps(n, cg->getCurrentCheckNodeRegDeps(), instr, cg);
-         }
+      generateS390DAAExceptionRestoreSnippet(cg, n, instr, op, true);
       }
 #endif
 
@@ -820,26 +801,7 @@ generateRXInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::N
 #ifdef J9_PROJECT_SPECIFIC
    if (op == TR::InstOpCode::CVB || op == TR::InstOpCode::EX)
       {
-      TR::Node* BCDCHKNode = cg->getCurrentCheckNodeBeingEvaluated();
-
-      if (BCDCHKNode && BCDCHKNode->getOpCodeValue() == TR::BCDCHK)
-         {
-         // Explicitly mark as a DAA intrinsic instruction
-         instr->setThrowsImplicitException();
-
-         //there might be cases that two or more insts generated will throw exception, and we only need one of the label.
-         //so we will assume that at this moment the second child of BCDCHKNode is the label.
-         TR::LabelSymbol * label = (TR::LabelSymbol *)BCDCHKNode->getChild(1);
-
-         TR::S390RestoreGPR7Snippet * restoreSnippet =
-                        new (INSN_HEAP) TR::S390RestoreGPR7Snippet(cg, n,  TR::LabelSymbol::create(INSN_HEAP,cg), label);
-         cg->addSnippet(restoreSnippet);
-         TR::Instruction * nop = new (INSN_HEAP) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, n, cg);
-         TR::Instruction* brcInstr = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, n, restoreSnippet->getSnippetLabel());
-
-         //generate register deps for CVB so that we will not see spills between CVB and the following branch
-         TR::TreeEvaluator::createDAACondDeps(n, cg->getCurrentCheckNodeRegDeps(), instr, cg);
-         }
+      generateS390DAAExceptionRestoreSnippet(cg, n, instr, op, true);
       }
 #endif
 
@@ -872,26 +834,7 @@ generateRXYInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::
 #ifdef J9_PROJECT_SPECIFIC
    if (op == TR::InstOpCode::CVBY || op == TR::InstOpCode::CVBG)
       {
-      TR::Node* BCDCHKNode = cg->getCurrentCheckNodeBeingEvaluated();
-
-      if (BCDCHKNode && BCDCHKNode->getOpCodeValue() == TR::BCDCHK)
-         {
-         // Explicitly mark as a DAA intrinsic instruction
-         instr->setThrowsImplicitException();
-
-         //there might be cases that two or more insts generated will throw exception, and we only need one of the label.
-         //so we will assume that at this moment the second child of BCDCHKNode is the label.
-         TR::LabelSymbol * label = (TR::LabelSymbol *)BCDCHKNode->getChild(1);
-
-         TR::S390RestoreGPR7Snippet * restoreSnippet =
-                        new (INSN_HEAP) TR::S390RestoreGPR7Snippet(cg, n,  TR::LabelSymbol::create(INSN_HEAP,cg), label);
-         cg->addSnippet(restoreSnippet);
-         TR::Instruction* brcInstr = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, n, restoreSnippet->getSnippetLabel());
-
-         //generate register deps for CVBY/CVBG so that we will not see spills between CVB and the following branch
-         TR::TreeEvaluator::createDAACondDeps(n, cg->getCurrentCheckNodeRegDeps(), instr, cg);
-
-         }
+      generateS390DAAExceptionRestoreSnippet(cg, n, instr, op, false);
       }
 #endif
 
@@ -944,24 +887,7 @@ generateRXYInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::
 #ifdef J9_PROJECT_SPECIFIC
    if (op == TR::InstOpCode::CVBY || op == TR::InstOpCode::CVBG)
       {
-      TR::Node* BCDCHKNode = cg->getCurrentCheckNodeBeingEvaluated();
-
-      if (BCDCHKNode && BCDCHKNode->getOpCodeValue() == TR::BCDCHK)
-         {
-         // Explicitly mark as a DAA intrinsic instruction
-         instr->setThrowsImplicitException();
-
-         //there might be cases that two or more insts generated will throw exception, and we only need one of the label.
-         //so we will assume that at this moment the second child of BCDCHKNode is the label.
-         TR::LabelSymbol * label = (TR::LabelSymbol *)BCDCHKNode->getChild(1);
-
-         TR::S390RestoreGPR7Snippet * restoreSnippet =
-                        new (INSN_HEAP) TR::S390RestoreGPR7Snippet(cg, n,  TR::LabelSymbol::create(INSN_HEAP,cg), label);
-         cg->addSnippet(restoreSnippet);
-         TR::Instruction* brcInstr =generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, n, restoreSnippet->getSnippetLabel());
-
-         TR::TreeEvaluator::createDAACondDeps(n, cg->getCurrentCheckNodeRegDeps(), instr, cg);
-         }
+      generateS390DAAExceptionRestoreSnippet(cg, n, instr, op, false);
       }
 #endif
 
@@ -994,24 +920,7 @@ generateRXYInstruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::
 #ifdef J9_PROJECT_SPECIFIC
    if (op == TR::InstOpCode::CVBY || op == TR::InstOpCode::CVBG)
       {
-      TR::Node* BCDCHKNode = cg->getCurrentCheckNodeBeingEvaluated();
-
-      if (BCDCHKNode && BCDCHKNode->getOpCodeValue() == TR::BCDCHK)
-         {
-         // Explicitly mark as a DAA intrinsic instruction
-         instr->setThrowsImplicitException();
-
-         //there might be cases that two or more insts generated will throw exception, and we only need one of the label.
-         //so we will assume that at this moment the second child of BCDCHKNode is the label.
-         TR::LabelSymbol * label = (TR::LabelSymbol *)BCDCHKNode->getChild(1);
-
-         TR::S390RestoreGPR7Snippet * restoreSnippet =
-                        new (INSN_HEAP) TR::S390RestoreGPR7Snippet(cg, n,  TR::LabelSymbol::create(INSN_HEAP,cg), label);
-         cg->addSnippet(restoreSnippet);
-         TR::Instruction* brcInstr = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, n, restoreSnippet->getSnippetLabel());
-
-         TR::TreeEvaluator::createDAACondDeps(n, cg->getCurrentCheckNodeRegDeps(), instr, cg);
-         }
+      generateS390DAAExceptionRestoreSnippet(cg, n, instr, op, false);
       }
 #endif
 
@@ -1560,27 +1469,14 @@ generateSS2Instruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::
       instr = new (INSN_HEAP) TR::S390SS2Instruction(op, n, len1, mf1, len2, mf2, cg);
 
 #ifdef J9_PROJECT_SPECIFIC
-   if (op == TR::InstOpCode::ZAP || op == TR::InstOpCode::CP || op == TR::InstOpCode::AP || op == TR::InstOpCode::SP || op == TR::InstOpCode::MP || op == TR::InstOpCode::DP)
+   if (op == TR::InstOpCode::ZAP ||
+           op == TR::InstOpCode::CP ||
+           op == TR::InstOpCode::AP ||
+           op == TR::InstOpCode::SP ||
+           op == TR::InstOpCode::MP ||
+           op == TR::InstOpCode::DP)
       {
-      TR::Node* BCDCHKNode = cg->getCurrentCheckNodeBeingEvaluated();
-
-      if (BCDCHKNode && BCDCHKNode->getOpCodeValue() == TR::BCDCHK)
-         {
-         // Explicitly mark as a DAA intrinsic instruction
-         instr->setThrowsImplicitException();
-
-         //there might be cases that two or more insts generated will throw exception, and we only need one of the label.
-         //so we will assume that at this moment the second child of BCDCHKNode is the label.
-         TR::LabelSymbol * label = (TR::LabelSymbol *)BCDCHKNode->getChild(1);
-
-         TR::S390RestoreGPR7Snippet * restoreSnippet =
-                        new (INSN_HEAP) TR::S390RestoreGPR7Snippet(cg, n,  TR::LabelSymbol::create(INSN_HEAP,cg), label);
-         cg->addSnippet(restoreSnippet);
-         TR::Instruction* brcInstr = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, n, restoreSnippet->getSnippetLabel());
-
-         //generate register deps for CVB so that we will not see spills between CVB and the following branch
-         TR::TreeEvaluator::createDAACondDeps(n, cg->getCurrentCheckNodeRegDeps(), instr, cg);
-         }
+      generateS390DAAExceptionRestoreSnippet(cg, n, instr, op, false);
       }
 #endif
 
@@ -1607,25 +1503,7 @@ generateSS3Instruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::
 #ifdef J9_PROJECT_SPECIFIC
    if (op == TR::InstOpCode::SRP)
       {
-      TR::Node* BCDCHKNode = cg->getCurrentCheckNodeBeingEvaluated();
-
-      if (BCDCHKNode && BCDCHKNode->getOpCodeValue() == TR::BCDCHK)
-         {
-         // Explicitly mark as a DAA intrinsic instruction
-         instr->setThrowsImplicitException();
-
-         //there might be cases that two or more insts generated will throw exception, and we only need one of the label.
-         //so we will assume that at this moment the second child of BCDCHKNode is the label.
-         TR::LabelSymbol * label = (TR::LabelSymbol *)BCDCHKNode->getChild(1);
-
-         TR::S390RestoreGPR7Snippet * restoreSnippet =
-                        new (INSN_HEAP) TR::S390RestoreGPR7Snippet(cg, n,  TR::LabelSymbol::create(INSN_HEAP,cg), label);
-         cg->addSnippet(restoreSnippet);
-         TR::Instruction* brcInstr = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, n, restoreSnippet->getSnippetLabel());
-
-         //generate register deps for SRP so that we will not see spills between CVB and the following branch
-         TR::TreeEvaluator::createDAACondDeps(n, cg->getCurrentCheckNodeRegDeps(), instr, cg);
-         }
+      generateS390DAAExceptionRestoreSnippet(cg, n, instr, op, false);
       }
 #endif
    return instr;
@@ -1645,25 +1523,7 @@ generateSS3Instruction(TR::CodeGenerator * cg, TR::InstOpCode::Mnemonic op, TR::
 #ifdef J9_PROJECT_SPECIFIC
    if (op == TR::InstOpCode::SRP)
       {
-      TR::Node* BCDCHKNode = cg->getCurrentCheckNodeBeingEvaluated();
-
-      if (BCDCHKNode && BCDCHKNode->getOpCodeValue() == TR::BCDCHK)
-         {
-         // Explicitly mark as a DAA intrinsic instruction
-         instr->setThrowsImplicitException();
-
-         //there might be cases that two or more insts generated will throw exception, and we only need one of the label.
-         //so we will assume that at this moment the second child of BCDCHKNode is the label.
-         TR::LabelSymbol * label = (TR::LabelSymbol *)BCDCHKNode->getChild(1);
-
-         TR::S390RestoreGPR7Snippet * restoreSnippet =
-                        new (INSN_HEAP) TR::S390RestoreGPR7Snippet(cg, n,  TR::LabelSymbol::create(INSN_HEAP,cg), label);
-         cg->addSnippet(restoreSnippet);
-         TR::Instruction* brcInstr = generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, n, restoreSnippet->getSnippetLabel());
-
-         //generate register deps for SRP so that we will not see spills between CVB and the following branch
-         TR::TreeEvaluator::createDAACondDeps(n, cg->getCurrentCheckNodeRegDeps(), instr, cg);
-         }
+      generateS390DAAExceptionRestoreSnippet(cg, n, instr, op, false);
       }
 #endif
    return instr;
@@ -3380,3 +3240,67 @@ TR::Instruction *generateZeroVector(TR::Node *node, TR::CodeGenerator *cg, TR::R
    {
    return generateVRIaInstruction(cg, TR::InstOpCode::VREPI, node, vecZeroReg, 0, 3);
    }
+
+#ifdef J9_PROJECT_SPECIFIC
+
+/**
+ * \brief This function returns true if the spcified instruction is designed to throw decimal overflow
+ * exceptions according to the POP.
+ *
+ * zLinux runs a process with this exception disabled. As a result of this, the JIT signal handler
+ * doesn't not receive any signal in case decimal overflow happens. This helper function can help
+ * codegen to decide whether to rely on condition code in such cases.
+*/
+bool
+isCanThrowDecimalOverflowException(TR::InstOpCode::Mnemonic op)
+   {
+   switch(op)
+      {
+   case TR::InstOpCode::AP:
+   case TR::InstOpCode::SP:
+   case TR::InstOpCode::SRP:
+   case TR::InstOpCode::ZAP:
+       return true;
+   default:
+       return false;
+      }
+   }
+
+void
+generateS390DAAExceptionRestoreSnippet(TR::CodeGenerator* cg,
+                                       TR::Node* n,
+                                       TR::Instruction* instr,
+                                       TR::InstOpCode::Mnemonic op,
+                                       bool isHasNOP)
+   {
+   TR::Node* BCDCHKNode = cg->getCurrentCheckNodeBeingEvaluated();
+
+   if (BCDCHKNode && BCDCHKNode->getOpCodeValue() == TR::BCDCHK)
+      {
+      // Explicitly mark as a DAA intrinsic instruction
+      instr->setThrowsImplicitException();
+
+      //there might be cases that two or more insts generated will throw exception, and we only need one of the label.
+      //so we will assume that at this moment the second child of BCDCHKNode is the label.
+      TR::LabelSymbol * handlerLabel = cg->getCurrentBCDCHKHandlerLabel();
+      TR_ASSERT(handlerLabel, "BCDCHK node handler label should not be null");
+
+      TR::LabelSymbol* restoreGPR7SnippetHandler = TR::LabelSymbol::create(INSN_HEAP,cg);
+      TR::S390RestoreGPR7Snippet * restoreSnippet =
+                     new (INSN_HEAP) TR::S390RestoreGPR7Snippet(cg, n, restoreGPR7SnippetHandler, handlerLabel);
+      cg->addSnippet(restoreSnippet);
+
+      if(isHasNOP)
+         {
+         TR::Instruction * nop = new (INSN_HEAP) TR::S390NOPInstruction(TR::InstOpCode::NOP, 2, n, cg);
+         }
+
+      TR::InstOpCode::S390BranchCondition bc = isCanThrowDecimalOverflowException(op) ? TR::InstOpCode::COND_CC3 : TR::InstOpCode::COND_NOP;
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, TR::InstOpCode::COND_NOP, n, restoreGPR7SnippetHandler);
+      generateS390BranchInstruction(cg, TR::InstOpCode::BRC, bc, n, handlerLabel);
+
+      //generate register deps so that we will not see spills between the instruction and the following branch
+      TR::TreeEvaluator::createDAACondDeps(n, cg->getCurrentCheckNodeRegDeps(), instr, cg);
+      }
+   }
+#endif
