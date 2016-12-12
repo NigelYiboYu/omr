@@ -3264,58 +3264,6 @@ void OMR::Z::TreeEvaluator::createDAACondDeps(TR::Node * node, TR::RegisterDepen
       }
 }
 
-TR::Node* OMR::Z::TreeEvaluator::DAAAddressPointer(TR::Node* callNode, TR::CodeGenerator* cg)
-   {
-   TR::Node* base = callNode->getChild(0);
-   TR::Node* index = callNode->getChild(1);
-
-   TR::Node * pdBufAddressNode = NULL;
-   TR::Node * pdBufPositionNode = NULL;
-
-#ifdef J9_PROJECT_SPECIFIC
-   if (callNode->getSymbol()->getResolvedMethodSymbol())
-      {
-      if (callNode->getSymbol()->getResolvedMethodSymbol()->getRecognizedMethod())
-         {
-         if ((callNode->getSymbol()->getResolvedMethodSymbol()->getRecognizedMethod() == TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToInteger_ByteBuffer_)
-               || (callNode->getSymbol()->getResolvedMethodSymbol()->getRecognizedMethod() == TR::com_ibm_dataaccess_DecimalData_convertPackedDecimalToLong_ByteBuffer_))
-            {
-            pdBufAddressNode = callNode->getChild(4);
-            pdBufPositionNode = callNode->getChild(6);
-            return TR::Node::create(TR::l2a, 1, TR::Node::create(TR::ladd, 2, pdBufAddressNode, TR::Node::create(TR::i2l, 1, TR::Node::create(TR::iadd, 2, pdBufPositionNode, index))));
-            }
-         }
-      }
-#endif
-
-   if (TR::Compiler->target.is64Bit())
-      {
-      TR::Node* addressBase   = base;
-      TR::Node* addressIndex  = TR::Node::create(TR::i2l,    1, index);
-      TR::Node* addressHeader = TR::Node::create(TR::lconst, 0, 0);
-      TR::Node* addressOffset = TR::Node::create(TR::aladd,  2, addressHeader, addressIndex);
-
-      // Update the address header size
-      addressHeader->setLongInt(TR::Compiler->om.contiguousArrayHeaderSizeInBytes());
-
-      // Compute the final address as base + header + index
-      return TR::Node::create(TR::aladd, 2, addressBase, addressOffset);
-      }
-   else
-      {
-      TR::Node* addressBase   = base;
-      TR::Node* addressIndex  = index;
-      TR::Node* addressHeader = TR::Node::create(TR::iconst, 0, 0);
-      TR::Node* addressOffset = TR::Node::create(TR::aiadd,  2, addressHeader, addressIndex);
-
-      // Update the address header size
-      addressHeader->setInt(TR::Compiler->om.contiguousArrayHeaderSizeInBytes());
-
-      // Compute the final address as base + header + index
-      return TR::Node::create(TR::aiadd, 2, addressBase, addressOffset);
-      }
-   }
-
 TR::Register *
 OMR::Z::TreeEvaluator::butestEvaluator(TR::Node * node, TR::CodeGenerator * cg)
    {

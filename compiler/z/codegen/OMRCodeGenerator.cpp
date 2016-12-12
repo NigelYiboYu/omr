@@ -11161,9 +11161,6 @@ bool OMR::Z::CodeGenerator::reliesOnAParticularSignEncoding(TR::Node *node)
    if (op.getOpCodeValue() == TR::pddivrem)
       return false;
 
-   if (op.isSimpleBCDClean())
-      return false;
-
    if (op.isSetSign() || op.isSetSignOnNode())
       return false;
 

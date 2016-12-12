@@ -421,9 +421,6 @@ class OMR_EXTENSIBLE TreeEvaluator: public OMR::TreeEvaluator
    static TR::Register *inlineVectorSetElementHelper(TR::Node *node, TR::CodeGenerator *cg, int8_t size, bool isPromote);
 
    static TR::Register *tryToReuseInputVectorRegs(TR::Node *node, TR::CodeGenerator *cg);
-
-   static TR::Node* DAAAddressPointer (TR::Node* callNode, TR::CodeGenerator* cg);
-
    static void         createDAACondDeps(TR::Node * node, TR::RegisterDependencyConditions * daaDeps,
                                               TR::Instruction * daaInstr, TR::CodeGenerator * cg);
    static void         addToRegDep(TR::RegisterDependencyConditions * daaDeps, TR::Register * reg,
