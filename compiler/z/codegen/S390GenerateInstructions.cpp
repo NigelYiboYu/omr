@@ -2220,6 +2220,7 @@ TR::Instruction *
 generateSnippetCall(TR::CodeGenerator * cg, TR::Node * callNode, TR::Snippet * s, TR::RegisterDependencyConditions * cond, TR::SymbolReference *callSymRef, TR::Instruction * preced)
    {
    TR::Register * RegRA = cond->searchPostConditionRegister(cg->getReturnAddressRegister());
+   TR::Register * regZero = cond->searchPostConditionRegister(TR::RealRegister::GPR0);
 
    TR::Instruction * callInstr;
 
@@ -2229,11 +2230,38 @@ generateSnippetCall(TR::CodeGenerator * cg, TR::Node * callNode, TR::Snippet * s
          TR::RegisterDependencyConditions(cond->getPreConditions(), NULL,
             cond->getAddCursorForPre(), 0, cg);
 
-      TR::RegisterDependencyConditions *postDeps = new (INSN_HEAP) TR::RegisterDependencyConditions(0, 2, cg);
+      TR::RegisterDependencyConditions *postDeps = new (INSN_HEAP) TR::RegisterDependencyConditions(0, regZero ? 3 : 2, cg);
       TR::Register * killRegRA = cg->allocateRegister();
       TR::Register * killRegEP = cg->allocateRegister();
+
       postDeps->addPostCondition(killRegRA, cg->getReturnAddressRegister());
       postDeps->addPostCondition(killRegEP, cg->getEntryPointRegister());
+
+      /* The picbuilder unresolvedHelper and VM helper function use GPR0 for returnAddress passing and, thus, clobber GPR0.
+       * We need to add regZero to make sure that GPR0 contains valid data after the BRASL so that HighWordRA can use HPR0 as
+       * spill location.
+       *
+       * e.g.  HPR0 must be valid after the BRASL to ensure correct functionality.
+       *
+       *  LLZRGF  GPR6, Shadow[<vft-symbol>] 0(GPR1) ;
+       *  LGR     GPR2,GPR4    ; LR=Reg_param
+       *  LHLR    HPR0,GPR4    ; Reverse spill Highword LHLR : Load (High <- Low)
+       *  STG     GPR10,#651 0(GPR5)
+       *  Label L0336:
+       *  BRASL   GPR14, 0x000003FE981A8A90, targetAddr=0x000003FF9A3D8324 ; call to unresolvedHelper
+       *  LGR     GPR4,GPR6    ; LR=Reg_move
+       *  LLHFR   GPR6,HPR0    ; LLHFR : Load (Low <- High)
+       *  IIHF    GPR6,0       ; Load Highword Spill
+       *  Label L0337:
+       *  LG      GPR14,#652 0(GPR4)
+       *  LGHI    GPR0,0x0
+       *  Label L0338:
+       *  BASR    GPR14,GPR14                 # virtual call
+       */
+      if(regZero)
+         {
+         postDeps->addPostCondition(regZero, TR::RealRegister::GPR0);
+         }
 
       // Need to put the preDeps on the label, and not on the BRASL
       // because we use virtual reg from preDeps after the BRASL
